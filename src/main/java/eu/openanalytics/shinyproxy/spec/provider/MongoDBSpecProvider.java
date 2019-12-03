@@ -142,7 +142,6 @@ public class MongoDBSpecProvider implements IProxySpecProvider {
         try {
             DBCollection apps = getDBCollection();
             ProxySpec proxySpec = transformToProxySpec(apps.findOne(new BasicDBObject().append("id", id)));
-            logger.debug(proxySpec);
             return proxySpec;
         } catch (UnknownHostException e) {
             e.printStackTrace();

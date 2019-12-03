@@ -284,6 +284,7 @@
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
 						<exclude>templates/**</exclude>
+						<exclude>.idea/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
