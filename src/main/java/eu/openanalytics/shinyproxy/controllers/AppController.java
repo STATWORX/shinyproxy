@@ -20,10 +20,14 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -44,6 +48,8 @@ public class AppController extends BaseController {
 
 	@Inject
 	private ProxyMappingManager mappingManager;
+
+	private static boolean added = false;
 	
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
@@ -72,6 +78,22 @@ public class AppController extends BaseController {
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
 		return response;
+	}
+
+	@RequestMapping(value="/goto/**")
+	public void customApp(HttpServletRequest request, HttpServletResponse response) throws URISyntaxException {
+		if (! added)
+			mappingManager.addMapping("mlflow", "mlflow", new URI("http://ds-api-mlflow:5000/mlflow/"));
+
+		String subPath = request.getRequestURI();
+		subPath = subPath.substring(subPath.indexOf("/goto/") + 6);
+
+		try {
+			mappingManager.dispatchAsync("mlflow/"+subPath, request, response);
+		} catch (Exception e) {
+			throw new RuntimeException("Error redirecting proxy request", e);
+		}
+
 	}
 	
 	@RequestMapping(value="/app_direct/**")

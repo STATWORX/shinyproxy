@@ -1,0 +1,37 @@
+proxy:
+  port: 8080
+  authentication: simple
+  users:
+    - name: admin
+      password: admin
+      groups: scientists
+  admin-groups: scientists
+
+  docker:
+      internal-networking: true
+
+  spec-provider: spec
+
+  specs:
+    - id: 01_hello
+      display-name: Hello Application
+      description: Application which demonstrates the basics of a Shiny app
+      container-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
+      container-image: openanalytics/shinyproxy-demo
+      container-network: df-net
+    - id: 06_tabsets
+      container-cmd: ["R", "-e", "shinyproxy::run_06_tabsets()"]
+      container-image: openanalytics/shinyproxy-demo
+      container-network: df-net
+
+logging:
+  level:
+    root: DEBUG
+  file:
+    shinyproxy.log
+
+static:
+  target-uri: http://ds_api_mlflow:5000/mlflow
+
+server:
+  useForwardHeaders: true
