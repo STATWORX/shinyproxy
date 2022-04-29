@@ -8,5 +8,6 @@ THIS_FILE_DIR := $(shell dirname $(THIS_FILE))
 build:
 	DOCKER_BUILDKIT=1 docker build -f $(THIS_FILE_DIR)/Dockerfile \
                 -t $(IMAGE) \
+                --pull \
                 $(THIS_FILE_DIR)
 
