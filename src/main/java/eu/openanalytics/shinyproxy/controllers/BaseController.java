@@ -32,6 +32,7 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Null;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
@@ -140,6 +141,16 @@ public abstract class BaseController {
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());
 		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
+
+		// Check for monitoring url
+		String monitorUrl = environment.getProperty("proxy.monitoring-dashboard");
+		//String monitorUrl = "test";
+		if (Objects.equals(monitorUrl, null)) {
+			map.put("isMonitorUrl", false);
+		} else {
+			map.put("monitorUrl", monitorUrl);
+			map.put("isMonitorUrl", true);
+		}
 	}
 	
 	protected String getSupportAddress() {

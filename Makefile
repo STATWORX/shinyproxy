@@ -1,4 +1,4 @@
-IMAGE = shinyproxy:2.6-oidc-extra
+IMAGE = shinyproxy:2.6.1.1-oidc-extra
 CONTAINER = shiny-proxy
 NETWORK = cdck-net
 
