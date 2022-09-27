@@ -1,4 +1,4 @@
-IMAGE = shinyproxy:2.6.1.1-oidc-extra
+IMAGE = shinyproxy:2.6.1-oidc-extra
 CONTAINER = shiny-proxy
 NETWORK = cdck-net
 
@@ -9,5 +9,6 @@ build:
 	DOCKER_BUILDKIT=1 docker build -f $(THIS_FILE_DIR)/Dockerfile \
                 -t $(IMAGE) \
                 --pull \
+                --no-cache \
                 $(THIS_FILE_DIR)
 
