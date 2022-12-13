@@ -1,4 +1,4 @@
-IMAGE = shinyproxy:2.6.1-oidc-extra
+IMAGE = shinyproxy:2.6-oidc-extra-logging-dependencies-update
 CONTAINER = shiny-proxy
 NETWORK = cdck-net
 

@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Null;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
