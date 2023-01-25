@@ -1,4 +1,4 @@
-IMAGE = shinyproxy:2.6-oidc-extra-logging-dependencies-update
+IMAGE = shinyproxy:2.6_oidc-extra-logging-updated-dependencies
 CONTAINER = shiny-proxy
 NETWORK = cdck-net
 
@@ -7,8 +7,19 @@ THIS_FILE_DIR := $(shell dirname $(THIS_FILE))
 
 build:
 	DOCKER_BUILDKIT=1 docker build -f $(THIS_FILE_DIR)/Dockerfile \
-                -t $(IMAGE) \
-                --pull \
-                --no-cache \
-                $(THIS_FILE_DIR)
+				-t $(IMAGE) \
+				--pull \
+				--no-cache \
+				$(THIS_FILE_DIR)
 
+push: check-registry
+	docker tag $(IMAGE) $(REGISTRY)/$(IMAGE) 
+	az acr login --name $(REGISTRY) || (az login && az acr login --name $(REGISTRY)) 
+	docker push $(REGISTRY)/$(IMAGE)
+
+
+
+check-registry:
+ifndef REGISTRY 
+	$(error REGISTRY is not set) 
+endif
