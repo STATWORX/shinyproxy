@@ -29,20 +29,31 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 @Controller
-public class TosController extends BaseController {
+public class CustomController extends BaseController {
 
 	@Inject
 	ShinyProxySpecProvider shinyProxySpecProvider;
 
-	@RequestMapping("/tos")
-    private Object index(ModelMap map, HttpServletRequest request) {
+	@RequestMapping("/tou")
+    private Object tou(ModelMap map, HttpServletRequest request) {
 
 		prepareMap(map, request);
 		
 		// operator specific
 		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
 
-		return "tos";
+		return "tou";
+    }
+
+	@RequestMapping("/dps")
+    private Object dps(ModelMap map, HttpServletRequest request) {
+
+		prepareMap(map, request);
+		
+		// operator specific
+		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
+
+		return "dps";
     }
 
 }
