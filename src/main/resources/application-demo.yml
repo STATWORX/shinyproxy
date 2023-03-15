@@ -42,3 +42,8 @@ proxy:
 logging:
   file:
     shinyproxy.log
+
+spring:
+  profiles:
+    include:
+      - pbi
