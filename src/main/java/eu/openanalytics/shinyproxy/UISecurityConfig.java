@@ -54,6 +54,9 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
 			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
 
+			http.authorizeRequests().antMatchers("/pbi/{dashId}/**").access("@pbiAccessControlService.canAccessDashboard(authentication, #dashId)");
+			http.authorizeRequests().antMatchers("/generate-token/pbi/{dashId}/**").access("@pbiAccessControlService.canAccessDashboard(authentication, #dashId)");
+
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 

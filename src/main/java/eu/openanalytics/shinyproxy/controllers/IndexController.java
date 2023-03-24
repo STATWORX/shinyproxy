@@ -22,6 +22,9 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import eu.openanalytics.shinyproxy.PbiProperties.Dashboard;
+import eu.openanalytics.shinyproxy.PbiProperties;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,17 +32,27 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Controller
 public class IndexController extends BaseController {
 
+	private final static Logger log = LogManager.getLogger(PbiTokenController.class);
+
 	@Inject
 	ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@Inject
+	PbiProperties  pbiProperties;
 
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
@@ -47,7 +60,29 @@ public class IndexController extends BaseController {
 		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
 		
 		prepareMap(map, request);
-		
+
+        Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
+
+		for (Map.Entry<String, Dashboard> entry : dashboards.entrySet()) {
+			String dashboardId = entry.getKey();
+			Dashboard dashboard = entry.getValue();
+			
+			System.out.println("Dashboard ID: " + dashboardId);
+			System.out.println("Display Name: " + dashboard.getDisplayName());
+			System.out.println("Description: " + dashboard.getDescription());
+			System.out.println("Access Groups: " + Arrays.toString(dashboard.getAccessGroups().toArray()));
+			System.out.println();
+		}
+
+		// for (Dashboard dashboard: dashboards) {
+		// 	log.info(MessageFormat.format("Dashboard ID: {0}",dashboard.getId()));
+		// 	dashboardProperties.put(dashboard,dashboard.getId());
+
+		// }
+
+        // map.put("dashboardProperties", dashboardProperties);
+        
+
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);
 

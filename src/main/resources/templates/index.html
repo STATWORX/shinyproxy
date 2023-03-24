@@ -113,6 +113,22 @@
     </th:block>
 </div>
 
+    <!-- <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Display Name</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="dashboard : ${dashboards}">
+                <td th:text="${dashboard.id}"></td>
+                <td th:text="${dashboard['display-name']}"></td>
+                <td th:text="${dashboard.description}"></td>
+            </tr>
+        </tbody>
+    </table> -->
 
 <script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {

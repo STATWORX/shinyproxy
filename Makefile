@@ -18,9 +18,7 @@ push: check-registry
 	az acr login --name $(REGISTRY) || (az login && az acr login --name $(REGISTRY)) 
 	docker push $(REGISTRY)/$(IMAGE)
 
-
-
 check-registry:
 ifndef REGISTRY 
-	$(error REGISTRY is not set) 
+	$(error REGISTRY is not set, use `make push REGISTRY=<registry>`) 
 endif

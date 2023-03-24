@@ -40,7 +40,7 @@ import org.apache.logging.log4j.Logger;
 
 
 @Controller
-public class PbiAuthController extends BaseController {
+public class PbiDashboardController extends BaseController {
 
     private final static Logger log = LogManager.getLogger(PbiTokenController.class);
     
@@ -53,13 +53,17 @@ public class PbiAuthController extends BaseController {
     @Inject
 	IAuthenticationBackend authenticationBackend;
     
-    @RequestMapping("/pbi/{reportName}")
-    private Object pbi(@PathVariable String reportName, ModelMap map, HttpServletRequest request) {
-    map.addAttribute("reportName", reportName);
-    
+    @RequestMapping("/pbi/{dashId}")
+    private Object pbi(@PathVariable String dashId, ModelMap map, HttpServletRequest request) {
+    map.addAttribute("dashId", dashId);
+
+    log.info(MessageFormat.format("Dashboard ID: {0}",dashId));
+
     log.info(MessageFormat.format("User´s group: {0}",Arrays.toString(userService.getGroups())));
 
-    log.info(MessageFormat.format("PBI environment: {0}",environment.getProperty("pbi.test")));
+    
+
+    log.info(MessageFormat.format("PBI environment: {0}",environment.getProperty("pbi.dashboards")));
 
     return "pbi"; // "http://example.com/pbi";
 
