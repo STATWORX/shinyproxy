@@ -65,7 +65,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
-@CrossOrigin(origins = "${pbi.defaults.fileserver}")
 @RestController
 public class PbiTokenController extends BaseController {
 	
@@ -113,7 +112,7 @@ public class PbiTokenController extends BaseController {
 			while ((inputLine = in.readLine()) != null) {
 				response.append(inputLine);
 			}
-			log.info(MessageFormat.format("Response status code: {0}",con.getResponseCode()));
+			log.debug(MessageFormat.format("Response status code: {0}",con.getResponseCode()));
 			in.close();
 	
 			return response.toString();
@@ -138,7 +137,7 @@ public class PbiTokenController extends BaseController {
 
     private List<String> getBearerToken(final String url, final String requestBody) {
 		String bearerToken = null;
-        log.info("Bearer token requested");
+        log.debug("Bearer token requested");
 		String response = sendRequest(url, requestBody, bearerToken, CONTENT_TYPE_WWW, HTTP_METHOD_POST);
 		List<String> parsedResponse = getResults(response,"access_token","expires_in");
         return parsedResponse;
@@ -147,13 +146,13 @@ public class PbiTokenController extends BaseController {
 			
     private List<String> getEmbedToken(final String url, final String bearerToken) {
         String requestBody = "{}";
-		log.info("Embed token requested");
+		log.debug("Embed token requested");
         String response = sendRequest(url, requestBody, bearerToken, CONTENT_TYPE_JSON, HTTP_METHOD_POST);
 		List<String> parsedResponse = getResults(response,"token","expiration");
 		return parsedResponse;
     }
 
-
+	@CrossOrigin(origins = "${pbi.defaults.fileserver}")
 	@RequestMapping(value = "/generate-token/pbi/{dashId}", method = RequestMethod.GET)
 	public String getBPI(@PathVariable String dashId, ServletRequest request) {
 		
@@ -161,7 +160,7 @@ public class PbiTokenController extends BaseController {
 		// String groupId = request.getParameter("groupId");
 		// String reportId = "d6440ccd-6cf3-46b0-a0d0-026708c46819";
 		// String groupId = "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b";
-		log.info(MessageFormat.format("Dashboard ID: {0}",dashId));
+		log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
 
 		Dashboard dashboard = pbiProperties.getDashboard(dashId);
 		if (dashboard == null) { 

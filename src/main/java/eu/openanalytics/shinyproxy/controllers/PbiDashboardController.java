@@ -57,42 +57,9 @@ public class PbiDashboardController extends BaseController {
     private Object pbi(@PathVariable String dashId, ModelMap map, HttpServletRequest request) {
     map.addAttribute("dashId", dashId);
 
-    log.info(MessageFormat.format("Dashboard ID: {0}",dashId));
-
-    log.info(MessageFormat.format("User´s group: {0}",Arrays.toString(userService.getGroups())));
-
-    
-
-    log.info(MessageFormat.format("PBI environment: {0}",environment.getProperty("pbi.dashboards")));
+    log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
 
     return "pbi"; // "http://example.com/pbi";
 
     }
 }
-
-
-// import org.springframework.context.annotation.Bean;
-// import org.springframework.context.annotation.Configuration;
-// import org.springframework.core.io.Resource;
-// import org.springframework.core.io.UrlResource;
-// import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
-
-// import java.net.MalformedURLException;
-// import java.net.URL;
-
-// @Configuration
-// public class TemplateResolverConfiguration {
-
-//     @Bean
-//     public SpringResourceTemplateResolver pbiTemplateResolver() throws MalformedURLException {
-//         SpringResourceTemplateResolver resolver = new SpringResourceTemplateResolver();
-//         resolver.setPrefix("http://example.com/");
-//         resolver.setSuffix(".html");
-//         resolver.setTemplateMode("HTML");
-//         resolver.setCharacterEncoding("UTF-8");
-//         resolver.setCheckExistence(true);
-//         resolver.setCacheable(false); // Disable caching for development purposes
-
-//         return resolver;
-//     }
-// }

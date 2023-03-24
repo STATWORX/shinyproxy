@@ -113,22 +113,30 @@
     </th:block>
 </div>
 
-    <!-- <table>
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Display Name</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="dashboard : ${dashboards}">
-                <td th:text="${dashboard.id}"></td>
-                <td th:text="${dashboard['display-name']}"></td>
-                <td th:text="${dashboard.description}"></td>
-            </tr>
-        </tbody>
-    </table> -->
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Display Name</th>
+            <th>Description</th>
+            <th>Access Groups</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="dashboard : ${pbiDashboards}">
+            <td th:text="${dashboard.value.getId()}"></td>
+            <td th:text="${dashboard.value.getDisplayName()}"></td>
+            <td th:text="${dashboard.value.getDescription()}"></td>
+            <td>
+                <ul>
+                    <li th:each="group : ${dashboard.value.getAccessGroups()}"
+                        th:text="${group}">
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 <script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {

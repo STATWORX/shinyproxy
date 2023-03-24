@@ -63,24 +63,7 @@ public class IndexController extends BaseController {
 
         Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
 
-		for (Map.Entry<String, Dashboard> entry : dashboards.entrySet()) {
-			String dashboardId = entry.getKey();
-			Dashboard dashboard = entry.getValue();
-			
-			System.out.println("Dashboard ID: " + dashboardId);
-			System.out.println("Display Name: " + dashboard.getDisplayName());
-			System.out.println("Description: " + dashboard.getDescription());
-			System.out.println("Access Groups: " + Arrays.toString(dashboard.getAccessGroups().toArray()));
-			System.out.println();
-		}
-
-		// for (Dashboard dashboard: dashboards) {
-		// 	log.info(MessageFormat.format("Dashboard ID: {0}",dashboard.getId()));
-		// 	dashboardProperties.put(dashboard,dashboard.getId());
-
-		// }
-
-        // map.put("dashboardProperties", dashboardProperties);
+        map.put("pbiDashboards", dashboards);
         
 
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
