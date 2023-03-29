@@ -23,6 +23,7 @@ package eu.openanalytics.shinyproxy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ import org.springframework.stereotype.Component;
 public class PbiProperties {
     private Map<String, Object> defaults;
     
-	private Map<String, Dashboard> dashboards = new HashMap<>();
+	private Map<String, Dashboard> dashboards = new LinkedHashMap<>();
 
     public Map<String, Object> getDefaults() {
         return defaults;
@@ -63,38 +64,19 @@ public class PbiProperties {
         return dashboards.get(dashId);
     }
 
-
 	public static class Defaults {
 
-        private String tenantId;
+        private String fileserver;
 
-        private String clientId;
 
-        private String secret;
-
-        public String getTenantId() {
-            return tenantId;
+        public String getFileserver() {
+            return fileserver;
         }
 
-        public void setTenantId(String tenantId) {
-            this.tenantId = tenantId;
+        public void setFileserver(String fileserver) {
+            this.fileserver = fileserver;
         }
 
-        public String getClientId() {
-            return clientId;
-        }
-
-        public void setClientId(String clientId) {
-            this.clientId = clientId;
-        }
-
-        public String getSecret() {
-            return secret;
-        }
-
-        public void setSecret(String secret) {
-            this.secret = secret;
-        }
     }
 
     public static class Dashboard {
@@ -104,6 +86,8 @@ public class PbiProperties {
         private String displayName;
 
         private String description;
+
+        private String logoUrl;
 
         private String reportId;
 
@@ -134,6 +118,14 @@ public class PbiProperties {
 
         public void setDescription(String description) {
             this.description = description;
+        }
+
+        public String getLogoUrl() {
+            return logoUrl;
+        }
+
+        public void setLogoUrl(String logoUrl) {
+            this.logoUrl = logoUrl;
         }
 
         public String getReportId() {

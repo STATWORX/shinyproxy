@@ -42,7 +42,8 @@ proxy:
 logging:
   file:
     shinyproxy.log
-
+  level:
+    root: INFO # DEBUG
 spring:
   profiles:
     include:

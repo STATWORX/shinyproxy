@@ -61,10 +61,11 @@ public class IndexController extends BaseController {
 		
 		prepareMap(map, request);
 
-        Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
-
+        // pbi specs
+		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
         map.put("pbiDashboards", dashboards);
-        
+		map.put("pbiLogo", resolveImageURI(environment.getProperty("pbi.defaults.logo-url")));
+
 
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);

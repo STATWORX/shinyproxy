@@ -119,7 +119,9 @@
             <th>ID</th>
             <th>Display Name</th>
             <th>Description</th>
+            <th>Logo Url</th>
             <th>Access Groups</th>
+            <th>User Permissions</th>
         </tr>
     </thead>
     <tbody>
@@ -127,10 +129,19 @@
             <td th:text="${dashboard.value.getId()}"></td>
             <td th:text="${dashboard.value.getDisplayName()}"></td>
             <td th:text="${dashboard.value.getDescription()}"></td>
+            <td th:text="${dashboard.value.getLogoUrl()}"></td>
             <td>
                 <ul>
                     <li th:each="group : ${dashboard.value.getAccessGroups()}"
                         th:text="${group}">
+                    </li>
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    <li
+                        th:each="userGroup : ${userGroups}"
+                        th:text="${userGroup}" >
                     </li>
                 </ul>
             </td>

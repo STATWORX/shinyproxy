@@ -137,6 +137,10 @@ public abstract class BaseController {
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
 
+		// user groups
+		String[] userGroups = userService.getGroups();
+		map.put("userGroups", userGroups);
+
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());
 		map.put("operatorForceTransfer", operatorService.mustForceTransfer());

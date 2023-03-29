@@ -59,7 +59,7 @@ public class PbiDashboardController extends BaseController {
 
     log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
 
-    return "pbi"; // "http://example.com/pbi";
+    return "pbi"; // "http://localhost:8081/index";
 
     }
 }

@@ -152,7 +152,7 @@ public class PbiTokenController extends BaseController {
 		return parsedResponse;
     }
 
-	@CrossOrigin(origins = "${pbi.defaults.fileserver}")
+	// @CrossOrigin(origins = "http://app-viewer:8081")
 	@RequestMapping(value = "/generate-token/pbi/{dashId}", method = RequestMethod.GET)
 	public String getBPI(@PathVariable String dashId, ServletRequest request) {
 		
@@ -161,6 +161,8 @@ public class PbiTokenController extends BaseController {
 		// String reportId = "d6440ccd-6cf3-46b0-a0d0-026708c46819";
 		// String groupId = "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b";
 		log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
+		
+		// log.info(MessageFormat.format("Request host: {0}:{1}",request.getServerName(),String.valueOf(request.getServerPort())));
 
 		Dashboard dashboard = pbiProperties.getDashboard(dashId);
 		if (dashboard == null) { 

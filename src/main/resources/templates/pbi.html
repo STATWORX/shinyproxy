@@ -33,11 +33,10 @@
 </head>
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
-
 	<div class="container-fluid">
-		<div id="PBI">
-			<h3>PBI</h3>
-		</div>
+        <p th:text="'Dashboard ID: ' + ${dashId}"></p>
 	</div>
+    <!-- <iframe th:src="@{'http://localhost:8081/pbi/' + ${dashId} + 'index'}" width="800" height="600"></iframe> -->
+    <iframe th:src="@{'http://localhost:8081/'}" width="800" height="600"></iframe>
 </body>
 </html>
