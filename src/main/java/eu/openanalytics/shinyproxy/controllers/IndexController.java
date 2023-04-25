@@ -20,26 +20,13 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
-import eu.openanalytics.shinyproxy.PbiProperties.Dashboard;
-import eu.openanalytics.shinyproxy.PbiProperties;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,63 +34,17 @@ import org.apache.logging.log4j.Logger;
 public class IndexController extends BaseController {
 
 	private final static Logger log = LogManager.getLogger(PbiTokenController.class);
-
-	@Inject
-	ShinyProxySpecProvider shinyProxySpecProvider;
-
-	@Inject
-	PbiProperties  pbiProperties;
-
+	
+	
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
+	
 		String landingPage = environment.getProperty("proxy.landing-page", "/");
 		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
-		
+
 		prepareMap(map, request);
 
-        // pbi specs
-		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
-        map.put("pbiDashboards", dashboards);
-		map.put("pbiLogo", resolveImageURI(environment.getProperty("pbi.defaults.logo-url")));
-
-
-		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
-		map.put("apps", apps);
-
-		Map<ProxySpec, String> appLogos = new HashMap<>();
-		map.put("appLogos", appLogos);
-		
-		boolean displayAppLogos = false;
-		for (ProxySpec app: apps) {
-			if (app.getLogoURL() != null) {
-				displayAppLogos = true;
-				appLogos.put(app, resolveImageURI(app.getLogoURL()));
-			}
-		}
-		map.put("displayAppLogos", displayAppLogos);
-
-		// template groups
-		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
-		List<ProxySpec> ungroupedApps = new ArrayList<>();
-
-		for (ProxySpec app: apps) {
-			String groupId = shinyProxySpecProvider.getTemplateGroupOfApp(app.getId());
-			if (groupId != null) {
-				groupedApps.putIfAbsent(groupId, new ArrayList<>());
-				groupedApps.get(groupId).add(app);
-			} else {
-				ungroupedApps.add(app);
-			}
-		}
-
-		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());;
-		map.put("templateGroups", templateGroups);
-		map.put("groupedApps", groupedApps);
-		map.put("ungroupedApps", ungroupedApps);
-
-
-		// operator specific
-		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
+		prepareCustomMap(map, request);
 
 		return "index";
     }

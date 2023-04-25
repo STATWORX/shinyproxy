@@ -25,10 +25,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +40,9 @@ import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
+import eu.openanalytics.shinyproxy.PbiProperties;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import eu.openanalytics.shinyproxy.PbiProperties.Dashboard;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +78,12 @@ public abstract class BaseController {
 
 	@Inject
 	OperatorService operatorService;
+
+	@Inject
+	PbiProperties  pbiProperties;
+
+	@Inject
+	ShinyProxySpecProvider shinyProxySpecProvider;
 
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
@@ -154,6 +166,54 @@ public abstract class BaseController {
 			map.put("monitorUrl", monitorUrl);
 			map.put("isMonitorUrl", true);
 		}
+	}
+	
+	protected void prepareCustomMap(ModelMap map, HttpServletRequest request) {
+
+        // pbi specs
+		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
+        map.put("pbiDashboards", dashboards);
+		map.put("pbiLogo", resolveImageURI(environment.getProperty("pbi.defaults.logo-url")));
+
+
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
+		Map<ProxySpec, String> appLogos = new HashMap<>();
+		map.put("appLogos", appLogos);
+		
+		boolean displayAppLogos = false;
+		for (ProxySpec app: apps) {
+			if (app.getLogoURL() != null) {
+				displayAppLogos = true;
+				appLogos.put(app, resolveImageURI(app.getLogoURL()));
+			}
+		}
+		map.put("displayAppLogos", displayAppLogos);
+
+		// template groups
+		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+		List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+		for (ProxySpec app: apps) {
+			String groupId = shinyProxySpecProvider.getTemplateGroupOfApp(app.getId());
+			if (groupId != null) {
+				groupedApps.putIfAbsent(groupId, new ArrayList<>());
+				groupedApps.get(groupId).add(app);
+			} else {
+				ungroupedApps.add(app);
+			}
+		}
+
+		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());;
+		map.put("templateGroups", templateGroups);
+		map.put("groupedApps", groupedApps);
+		map.put("ungroupedApps", ungroupedApps);
+
+
+		// operator specific
+		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
+
 	}
 	
 	protected String getSupportAddress() {

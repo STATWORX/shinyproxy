@@ -20,25 +20,23 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class CustomController extends BaseController {
 
-	@Inject
-	ShinyProxySpecProvider shinyProxySpecProvider;
 
 	@RequestMapping("/tou")
     private Object tou(ModelMap map, HttpServletRequest request) {
 
 		prepareMap(map, request);
 		
+		prepareCustomMap(map, request);
+
 		// operator specific
 		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
 
