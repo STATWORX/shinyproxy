@@ -28,6 +28,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -172,7 +173,16 @@ public abstract class BaseController {
 
         // pbi specs
 		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
-        map.put("pbiDashboards", dashboards);
+		Iterator<Map.Entry<String, Dashboard>> iterator = dashboards.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<String, Dashboard> entry = iterator.next();
+			Dashboard dashboard = entry.getValue();
+			if (dashboard != null && dashboard.getIsCdck() != null && dashboard.getIsCdck()) {
+				iterator.remove();
+			}
+		}
+
+		map.put("pbiDashboards", dashboards);
 		map.put("pbiLogo", resolveImageURI(environment.getProperty("pbi.defaults.logo-url")));
 
 

@@ -23,7 +23,6 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.UserService;
-import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -31,7 +30,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

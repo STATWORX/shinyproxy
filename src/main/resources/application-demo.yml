@@ -43,7 +43,7 @@ logging:
   file:
     shinyproxy.log
   level:
-    root: INFO # DEBUG
+    root: DEBUG
 spring:
   profiles:
     include:

@@ -21,17 +21,11 @@
 
 package eu.openanalytics.shinyproxy;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
-import org.springframework.context.annotation.Primary;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -95,6 +89,8 @@ public class PbiProperties {
 
 		private List<String> accessGroups;
 
+        private Boolean isCdck;
+
 		
         public String getId() {
             return id;
@@ -150,6 +146,14 @@ public class PbiProperties {
 	
 		public void setAccessGroups(List<String> accessGroups) {
 			this.accessGroups = accessGroups;
+		}
+
+        public Boolean getIsCdck() {
+			return isCdck;
+		}
+	
+		public void setIsCdck(Boolean isCdck) {
+			this.isCdck = isCdck;
 		}
     }
 
