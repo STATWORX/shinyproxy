@@ -29,3 +29,12 @@ build:
                 --pull \
                 --no-cache \
                 $(THIS_FILE_DIR)
+
+run:
+	docker run --name $(CONTAINER) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-d -p 8080:8080 \
+		$(IMAGE)
+
+rm:
+	docker rm -f $(CONTAINER)
