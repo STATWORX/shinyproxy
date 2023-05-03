@@ -38,3 +38,5 @@ run:
 
 rm:
 	docker rm -f $(CONTAINER)
+
+build_and_run_docker: build_jar build run 
