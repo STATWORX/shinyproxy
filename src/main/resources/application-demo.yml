@@ -5,10 +5,13 @@ proxy:
   heartbeat-rate: 10000
   heartbeat-timeout: 60000
   port: 8080
-  authentication: ldap
+  authentication: simple
   admin-groups: scientists
   # Example: 'simple' authentication configuration
   users:
+  - name: tesla
+    password: password
+    groups: scientists
   - name: jack
     password: password
     groups: scientists
@@ -43,7 +46,7 @@ logging:
   file:
     shinyproxy.log
   level:
-    root: DEBUG
+    root: INFO #DEBUG
 spring:
   profiles:
     include:

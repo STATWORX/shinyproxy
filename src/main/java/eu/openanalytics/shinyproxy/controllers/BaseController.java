@@ -172,7 +172,8 @@ public abstract class BaseController {
 	protected void prepareCustomMap(ModelMap map, HttpServletRequest request) {
 
         // pbi specs
-		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
+
+		Map<String, Dashboard> dashboards = new HashMap<>(pbiProperties.getDashboards());
 		Iterator<Map.Entry<String, Dashboard>> iterator = dashboards.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Map.Entry<String, Dashboard> entry = iterator.next();

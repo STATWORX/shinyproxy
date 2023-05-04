@@ -20,8 +20,6 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -40,26 +38,12 @@ import java.text.MessageFormat;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -158,8 +142,6 @@ public class PbiTokenController extends BaseController {
 		
 		// String reportId = request.getParameter("reportId");
 		// String groupId = request.getParameter("groupId");
-		// String reportId = "d6440ccd-6cf3-46b0-a0d0-026708c46819";
-		// String groupId = "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b";
 		log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
 		
 		// log.info(MessageFormat.format("Request host: {0}:{1}",request.getServerName(),String.valueOf(request.getServerPort())));

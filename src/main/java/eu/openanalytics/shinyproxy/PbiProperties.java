@@ -88,6 +88,8 @@ public class PbiProperties {
         private String groupId;
 
 		private List<String> accessGroups;
+        
+        private List<String> requestGroups;
 
         private Boolean isCdck;
 
@@ -146,6 +148,14 @@ public class PbiProperties {
 	
 		public void setAccessGroups(List<String> accessGroups) {
 			this.accessGroups = accessGroups;
+		}
+
+        public List<String> getRequestGroups() {
+			return requestGroups;
+		}
+	
+		public void setRequestGroups(List<String> requestGroups) {
+			this.requestGroups = requestGroups;
 		}
 
         public Boolean getIsCdck() {
