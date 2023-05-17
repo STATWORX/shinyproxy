@@ -12,6 +12,7 @@ pbi:
       report-id: "d6440ccd-6cf3-46b0-a0d0-026708c46819"
       access-groups: ["user1","scientists"]
       is-cdck: true
+      is-hidden: true
     
     - id: 2_test
       display-name: test2
@@ -20,7 +21,9 @@ pbi:
       report-id: "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b"
       group-id: "d6440ccd-6cf3-46b0-a0d0-026708c46819"
       access-groups: ["user2"]
-      request-groups: ["user1","scientists"]
+      is-primary: true
+      is-hidden: true
+
 
 
   # dashboards:
