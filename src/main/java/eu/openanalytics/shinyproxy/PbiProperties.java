@@ -50,7 +50,7 @@ public class PbiProperties {
     public void setDashboards(List<Dashboard> dashboards) {
         this.dashboards.clear();
         for (Dashboard dashboard : dashboards) {
-            this.dashboards.put(dashboard.getId(), dashboard);
+            this.dashboards.put(dashboard.getAppId(), dashboard);
         }
     }
 
@@ -75,7 +75,7 @@ public class PbiProperties {
 
     public static class Dashboard {
 
-        private String id;
+        private String appId;
 
         private String displayName;
 
@@ -87,21 +87,23 @@ public class PbiProperties {
 
         private String groupId;
 
+        private String primaryApp;
+
 		private List<String> accessGroups;
         
         private Boolean isCdck;
 
-        private Boolean isPrimary;
-
         private Boolean isHidden;
 
+        private Boolean hasAccess;
+
 		
-        public String getId() {
-            return id;
+        public String getAppId() {
+            return appId;
         }
 
-        public void setId(String id) {
-            this.id = id;
+        public void setAppId(String appId) {
+            this.appId = appId;
         }
 
         public String getDisplayName() {
@@ -160,12 +162,12 @@ public class PbiProperties {
 			this.isCdck = isCdck;
 		}
 
-        public Boolean getIsPrimary() {
-			return isPrimary;
+        public String getPrimaryApp() {
+			return primaryApp;
 		}
 	
-		public void setIsPrimary(Boolean isPrimary) {
-			this.isPrimary = isPrimary;
+		public void setPrimaryApp(String primaryApp) {
+			this.primaryApp = primaryApp;
 		}
 
         public Boolean getIsHidden() {
@@ -174,6 +176,14 @@ public class PbiProperties {
 	
 		public void setIsHidden(Boolean isHidden) {
 			this.isHidden = isHidden;
+		}
+
+        public Boolean getHasAccess() {
+			return hasAccess;
+		}
+
+		public void setHasAccess(Boolean hasAccess) {
+			this.hasAccess = hasAccess;
 		}
 
     }

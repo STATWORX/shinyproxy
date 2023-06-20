@@ -88,6 +88,17 @@ public abstract class BaseController {
 
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
+	
+	private boolean containsUserGroups(String[] userGroups, List <String> key) {
+		for (String group : userGroups) {
+			for (String k : key) {
+			if (group.toLowerCase().equals(k.toLowerCase())) {
+				return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	protected String getUserName(HttpServletRequest request) {
 		Principal principal = request.getUserPrincipal();
@@ -172,14 +183,21 @@ public abstract class BaseController {
 	protected void prepareCustomMap(ModelMap map, HttpServletRequest request) {
 
         // pbi specs
-
+		String[] userGroups = userService.getGroups();
+	
 		Map<String, Dashboard> dashboards = new HashMap<>(pbiProperties.getDashboards());
+
 		Iterator<Map.Entry<String, Dashboard>> iterator = dashboards.entrySet().iterator();
 		while (iterator.hasNext()) {
 			Map.Entry<String, Dashboard> entry = iterator.next();
 			Dashboard dashboard = entry.getValue();
+			List <String> key = dashboard.getAccessGroups();
+			boolean isUserGroupPresent = containsUserGroups(userGroups, key);
+			dashboard.setHasAccess(isUserGroupPresent);
+			
 			if (dashboard != null && dashboard.getIsCdck() != null && dashboard.getIsCdck()) {
 				iterator.remove();
+				continue;	
 			}
 		}
 

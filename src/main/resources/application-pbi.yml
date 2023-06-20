@@ -4,25 +4,23 @@ pbi:
     logo-url: "test.logo.url"
   
   dashboards:
-    - id: 1_test
+    - app_id: 1_test
       display-name: test1
       description: Development Version of Application
       logo-url: "test1.logo.url"
       group-id: "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b"
       report-id: "d6440ccd-6cf3-46b0-a0d0-026708c46819"
       access-groups: ["user1","scientists"]
-      is-cdck: true
-      is-hidden: true
     
-    - id: 2_test
+    - app_id: 2_test
       display-name: test2
       description: Development Version of the Application
       logo-url: "test2.logo.url"
       report-id: "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b"
       group-id: "d6440ccd-6cf3-46b0-a0d0-026708c46819"
       access-groups: ["user2"]
-      is-primary: true
-      is-hidden: true
+      primary-app: "test"
+      is-cdck: true
 
 
 

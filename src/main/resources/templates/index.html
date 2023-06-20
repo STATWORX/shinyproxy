@@ -120,18 +120,20 @@
             <th>Display Name</th>
             <th>Description</th>
             <th>Logo Url</th>
-            <th>Is Primary</th>
+            <th>get Primary</th>
+            <th>Has Access</th>
             <th>Access Groups</th>
             <th>User Permissions</th>
         </tr>
     </thead>
     <tbody>
         <tr th:each="dashboard : ${pbiDashboards}">
-            <td th:text="${dashboard.value.getId()}"></td>
+            <td th:text="${dashboard.value.getAppId()}"></td>
             <td th:text="${dashboard.value.getDisplayName()}"></td>
             <td th:text="${dashboard.value.getDescription()}"></td>
             <td th:text="${dashboard.value.getLogoUrl()}"></td>
-            <td th:text="${dashboard.value.getIsPrimary()}"></td>
+            <td th:text="${dashboard.value.getPrimaryApp()}"></td>
+            <td th:text="${dashboard.value.getHasAccess()}"></td>
             <td>
                 <ul>
                     <li th:each="group : ${dashboard.value.getAccessGroups()}"
