@@ -69,8 +69,13 @@ public class PbiAccessControlService {
         
         Dashboard dashboard = pbiProperties.getDashboard(dashId);
         
-        if (authentication == null || dashboard == null) {
-            log.warn("Dashboard or authentication method not found");
+        if (dashboard == null) {
+            log.warn("Requested Dashboard not found");
+            return false;
+        }
+
+        if (authentication == null ) {
+            log.warn("Authentication method not found");
             return false;
         }
 

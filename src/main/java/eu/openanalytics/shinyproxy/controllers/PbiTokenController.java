@@ -147,13 +147,15 @@ public class PbiTokenController extends BaseController {
 		// log.info(MessageFormat.format("Request host: {0}:{1}",request.getServerName(),String.valueOf(request.getServerPort())));
 
 		Dashboard dashboard = pbiProperties.getDashboard(dashId);
-		if (dashboard == null) { 
-			log.info(MessageFormat.format("No config found for ID: {0}",dashId));
-			return ""; // Return value tbd
-		}
 		String reportId = dashboard.getReportId();
 		String groupId = dashboard.getGroupId();
-
+		
+		// shift checks to pbi class propeties 
+		if (reportId == null || reportId.isEmpty() || groupId == null || groupId.isEmpty() ) {
+			log.warn("ReportID and/or GroupID are not properly set");
+			return ""; // Return value tbd
+		} 
+		
 		log.info(MessageFormat.format("Request Token for reportId {0} in groupId {1}",reportId,groupId));
 
 		String requestBody = MessageFormat.format("client_id={0}&grant_type=client_credentials&scope=openid profile email https://analysis.windows.net/powerbi/api/.default&client_secret={1}", client_id, client_secret);

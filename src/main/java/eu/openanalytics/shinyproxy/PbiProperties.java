@@ -103,6 +103,9 @@ public class PbiProperties {
         }
 
         public void setAppId(String appId) {
+            if (appId == null) {
+                throw new IllegalArgumentException("appId cannot be null.");
+            }
             this.appId = appId;
         }
 
