@@ -6,4 +6,6 @@
 .project
 .classpath
 .settings
-
+.vscode/*
+.settings/*
+recovery/*
