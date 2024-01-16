@@ -62,6 +62,51 @@
         </a>
     </th:block>
 </th:block>
+
+<table>
+    <colgroup>
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:10%">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>TenantId</th>
+            <th>Display Name</th>
+            <th>Description</th>
+            <th>Logo Url</th>
+            <th>get Primary</th>
+            <th>Has Access</th>
+            <th>Access Groups</th>
+            <th>User Permissions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="dashboard : ${pbiDashboards}">
+            <td th:text="${dashboard.value.getAppId()}"></td>
+            <td th:text="${dashboard.value.getTenantId()}"></td>
+            <td th:text="${dashboard.value.getDisplayName()}"></td>
+            <td th:text="${dashboard.value.getDescription()}"></td>
+            <td th:text="${dashboard.value.getLogoUrl()}"></td>
+            <td th:text="${dashboard.value.getPrimaryApp()}"></td>
+            <td th:text="${dashboard.value.getHasAccess()}"></td>
+            <td>
+                <ul>
+                    <li th:each="group : ${dashboard.value.getAccessGroups()}"
+                        th:text="${group}">
+                    </li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
 <!--End of the template.-->
 
 <div class="container-fluid">

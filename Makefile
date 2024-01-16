@@ -6,13 +6,23 @@ NETWORK = cdck-net
 THIS_FILE := $(realpath $(lastword $(MAKEFILE_LIST)))
 THIS_FILE_DIR := $(shell dirname $(THIS_FILE))
 
+package:
+	mvn -U clean package -Dlicense.skip=true -DskipTests=true
+
+
 build:
-	DOCKER_BUILDKIT=1 docker build -f $(THIS_FILE_DIR)/Dockerfile \
-				-t $(IMAGE) \
+	docker build --platform=linux/amd64 -f $(THIS_FILE_DIR)/Dockerfile \
 				--pull \
-				--no-cache \
+				-t $(IMAGE) \
 				--build-arg PROXY_VERSION=$(TAG) \
 				$(THIS_FILE_DIR)
+
+run:
+	docker run --rm \
+	-p 8081:8081 \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	$(IMAGE)
+
 
 push: check-registry
 	docker tag $(IMAGE) $(REGISTRY)/$(IMAGE) 

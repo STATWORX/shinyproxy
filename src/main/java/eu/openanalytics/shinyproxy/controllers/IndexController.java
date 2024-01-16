@@ -60,6 +60,7 @@ public class IndexController extends BaseController {
 		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
 		
 		prepareMap(map, request);
+		prepareCustomMap(map, request);
 		
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);

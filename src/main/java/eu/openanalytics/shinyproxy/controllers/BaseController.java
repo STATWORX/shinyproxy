@@ -30,6 +30,7 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.PbiProperties;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
@@ -47,10 +48,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public abstract class BaseController {
 
@@ -60,6 +68,9 @@ public abstract class BaseController {
 	@Inject
 	UserService userService;
 	
+	@Inject
+	PbiProperties pbiProperties;
+
 	@Inject
 	Environment environment;
 
@@ -97,6 +108,17 @@ public abstract class BaseController {
 				false);
 	}
 
+	private boolean containsUserGroups(List<String> userGroups, List<String> key) {
+		for (String group : userGroups) {
+			for (String k : key) {
+				if (group.equalsIgnoreCase(k)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	 
 	protected String getProxyEndpoint(Proxy proxy) {
 		if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
 		return proxy.getContainers().get(0).getTargets().keySet().iterator().next();
@@ -131,7 +153,53 @@ public abstract class BaseController {
 		map.put("resourcePrefix", "/" + identifierService.instanceId);
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
-		map.put("spInstance", identifierService.instanceId);
+		String monitorUrl = this.environment.getProperty("proxy.monitoring-dashboard");
+		if (Objects.equals(monitorUrl, (Object)null)) {
+		   map.put("isMonitorUrl", false);
+		} else {
+		   map.put("monitorUrl", monitorUrl);
+		   map.put("isMonitorUrl", true);
+		}
+	}
+	protected void prepareCustomMap(ModelMap map, HttpServletRequest request) {
+      List<String> userGroups = this.userService.getGroups();
+      Map<String, PbiProperties.Dashboard> dashboards = new HashMap<String, PbiProperties.Dashboard>(this.pbiProperties.getDashboards());
+      Iterator<Map.Entry<String, PbiProperties.Dashboard>> iterator = dashboards.entrySet().iterator();
+
+      while(iterator.hasNext()) {
+		 Map.Entry<String, PbiProperties.Dashboard> entry = iterator.next();
+         PbiProperties.Dashboard dashboard = (PbiProperties.Dashboard)entry.getValue();
+         List<String> key = dashboard.getAccessGroups();
+         boolean isUserGroupPresent = this.containsUserGroups(userGroups, key);
+         dashboard.setHasAccess(isUserGroupPresent);
+         if (dashboard != null && dashboard.getIsCdck() != null && dashboard.getIsCdck()) {
+            iterator.remove();
+         }
+      }
+		map.put("pbiDashboards", dashboards);
+		map.put("userGroups", userGroups);
+
+
+	map.put("pbiLogo", this.resolveImageURI(this.environment.getProperty("pbi.defaults.logo-url")));
+	ProxySpec[] apps = (ProxySpec[])this.proxyService.getProxySpecs((Predicate)null, false).toArray(new ProxySpec[0]);
+	map.put("apps", apps);
+	Map<ProxySpec, String> appLogos = new HashMap();
+	map.put("appLogos", appLogos);
+	boolean displayAppLogos = false;
+	ProxySpec[] var19 = apps;
+	int var10 = apps.length;
+
+	for(int var11 = 0; var11 < var10; ++var11) {
+		ProxySpec app = var19[var11];
+		if (app.getLogoURL() != null) {
+		displayAppLogos = true;
+		appLogos.put(app, this.resolveImageURI(app.getLogoURL()));
+		}
+	}
+
+    map.put("displayAppLogos", displayAppLogos);
+      
+	map.put("spInstance", identifierService.instanceId);
 	}
 	
 	protected String getSupportAddress() {

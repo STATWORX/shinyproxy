@@ -1,0 +1,51 @@
+pbi:  
+  defaults:
+    tenant-id: ${TENANT_ID}
+    principal-id: ${PRINCIPAL_ID}
+    principal-secret: ${PRINCIPAL_SECRET}
+
+  # dashboards:
+  #   - app-id: 1_test
+  #     display-name: test1
+  #     description: Development Version of Application
+  #     logo-url: "test1.logo.url"
+  #     group-id: "13527c39-c52a-4c5e-bd60-a282e7993a54"
+  #     report-id: "914e75c1-6797-4e04-bdb3-9108ead79a6d"
+  #     access-groups: ["admin","scientists"]
+  #     is-cdck: false  
+    
+  #   - app-id: 2_test
+  #     principal-id: test2
+  #     principal-secret: test
+  #     display-name: test2
+  #     description: Development Version of the Application
+  #     logo-url: "test2.logo.url"
+  #     report-id: "f3bcc1ec-3b25-463e-b026-12b0d37b1e1b"
+  #     group-id: "d6440ccd-6cf3-46b0-a0d0-026708c46819"
+  #     access-groups: ["admin"]
+  #     primary-app: "test"
+  #     is-cdck: false
+
+
+
+  dashboards:
+    - app-id: option_plus
+      display-name: Option+
+      description: Dashboard
+      group-id: '13527c39-c52a-4c5e-bd60-a282e7993a54'
+      report-id: '914e75c1-6797-4e04-bdb3-9108ead79a6d'
+      access-groups: ["admin"]
+      logo-url: 'optionplus-logo.png'
+      is-cdck: false
+      primary-app: option_plus
+      is-hidden: false
+    - app-id: favorite
+      display-name: Favorite
+      description: Development
+      group-id: 'b58fb4e5-9763-4eac-a2bd-3654442e2587'
+      report-id: 'a8b86bb1-e4ac-42bf-b364-2a8bf29d7ca9'
+      access-groups: [CDCK.ADMIN, CDCK.USER, admin]
+      logo-url: ''
+      is-cdck: true
+      primary-app: favorite
+      is-hidden: true

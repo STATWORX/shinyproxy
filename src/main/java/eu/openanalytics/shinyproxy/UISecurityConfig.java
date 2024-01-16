@@ -25,6 +25,7 @@ import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer.AuthorizedUrl;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -60,6 +61,8 @@ public class UISecurityConfig implements ICustomSecurityConfig {
             http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
             http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
             http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+            http.authorizeRequests().antMatchers("/pbi/{dashId}/**").access("@pbiAccessControlService.canAccessDashboard(authentication, #dashId)");
+            http.authorizeRequests().antMatchers("/generate-token/pbi/{dashId}/**").access("@pbiAccessControlService.canAccessDashboard(authentication, #dashId)");
 
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 

@@ -13,13 +13,11 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* 
 
-
+# RUN useradd --create-home --home $userhomedir --no-log-init app && chmod 770 $userhomedir
+# USER app
 WORKDIR $userhomedir
 
-COPY target/shinyproxy-${PROXY_VERSION}*.jar ./shinyproxy.jar
-
-RUN useradd --create-home --home $userhomedir --no-log-init app && chmod 777 $userhomedir
-
-USER app
+# COPY --chmod=0755  target/shinyproxy-${PROXY_VERSION}*.jar shinyproxy.jar
+COPY target/shinyproxy-${PROXY_VERSION}*.jar shinyproxy.jar
 
 CMD ["java","-jar","shinyproxy.jar"]
