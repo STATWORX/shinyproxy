@@ -54,6 +54,9 @@ import io.undertow.util.HttpString;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -90,6 +93,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 public class AppController extends BaseController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final static Logger log = LogManager.getLogger(PbiTokenController.class);
     private final HttpString acceptEncodingHeader = new HttpString("Accept-Encoding");
     @Inject
     private ProxyMappingManager mappingManager;
@@ -250,6 +254,7 @@ public class AppController extends BaseController {
     @RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) {
         ProxySpec spec = proxyService.getUserSpec(specId);
+        log.info("specId {}", specId);
         if (!userService.canAccess(spec)) {
             return ApiResponse.failForbidden();
         }

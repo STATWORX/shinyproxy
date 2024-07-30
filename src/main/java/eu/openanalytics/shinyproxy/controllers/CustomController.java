@@ -20,33 +20,44 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.view.RedirectView;
 
+import javax.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 @Controller
-public class IndexController extends BaseController {
+public class CustomController extends BaseController {
 
-	private final static Logger log = LogManager.getLogger(PbiTokenController.class);
-	
-	
-	@RequestMapping("/")
-    private Object index(ModelMap map, HttpServletRequest request) {
-	
-		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
+	@Inject
+	ShinyProxySpecProvider shinyProxySpecProvider;
+
+	boolean getOperatorShowTransferMessage(){
+		return environment.getProperty("proxy.operator.show-transfer-message-main-page", Boolean.class, true);
+	}
+
+	@RequestMapping("/tou")
+    private Object tou(ModelMap map, HttpServletRequest request) {
 
 		prepareMap(map, request);
+		
+		// operator specific
+		map.put("operatorShowTransferMessage", getOperatorShowTransferMessage());
 
+		return "tou";
+    }
+
+	@RequestMapping("/dps")
+    private Object dps(ModelMap map, HttpServletRequest request) {
+
+		prepareMap(map, request);
 		prepareCustomMap(map, request);
+		// operator specific
+		map.put("operatorShowTransferMessage", getOperatorShowTransferMessage());
 
-		return "index";
+		return "dps";
     }
 
 }

@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.ProxyAccessControlService;
 import eu.openanalytics.containerproxy.service.UserService;
+import eu.openanalytics.shinyproxy.PbiAccessControlService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Lazy;
@@ -36,7 +37,6 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import javax.inject.Inject;
 import java.io.IOException;
 
@@ -45,6 +45,12 @@ import static eu.openanalytics.containerproxy.ui.AuthController.AUTH_SUCCESS_URL
 @Component
 public class UISecurityConfig implements ICustomSecurityConfig {
 
+    @Inject
+	PbiProperties  pbiProperties;
+
+    @Inject
+    PbiAccessControlService pbiAccessControlService;
+    
     @Inject
     private IAuthenticationBackend auth;
 
@@ -60,9 +66,11 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
     @Inject
     private HandlerMappingIntrospector handlerMappingIntrospector;
+    
 
     @Override
     public void apply(HttpSecurity http) throws Exception {
+        
         if (auth.hasAuthorization()) {
 
             // Limit access to the app pages according to spec permissions
@@ -71,11 +79,11 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                     new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
                     new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
                     new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
+                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**")
+                    )
                 .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
             );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
-
             savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {
                 @Override
                 public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {
@@ -99,6 +107,17 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                 new MvcRequestMatcher(handlerMappingIntrospector, "/admin"),
                 new MvcRequestMatcher(handlerMappingIntrospector, "/admin/**"))
             .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
+        );
+            
+        // Limit access to pbi dashboards
+        MvcRequestMatcher pbiMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/pbi/{dashId}/**");
+        MvcRequestMatcher tokenMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/generate-token/pbi/{dashId}/**");
+        http.authorizeHttpRequests(authz -> authz
+            .requestMatchers(pbiMatcher, tokenMatcher)
+            .access((authentication, context) -> {
+                String dashId = pbiMatcher.matcher(context.getRequest()).getVariables().get("dashId");
+                return new AuthorizationDecision(pbiAccessControlService.canAccessDashboard(authentication.get(), dashId));
+            })
         );
 
     }

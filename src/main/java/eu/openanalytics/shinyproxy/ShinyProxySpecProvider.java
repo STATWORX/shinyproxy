@@ -79,6 +79,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
     private static Environment environment;
     private final Map<String, ProxySpec> specsMap = new HashMap<>();
+    private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
     private final Cache<String, Map<String, Integer>> maxInstancesCache;
     private List<ProxySpec> specs = new ArrayList<>();
     private List<TemplateGroup> templateGroups = new ArrayList<>();

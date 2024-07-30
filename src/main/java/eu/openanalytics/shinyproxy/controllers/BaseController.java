@@ -33,6 +33,9 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.PbiProperties;
+import eu.openanalytics.shinyproxy.PbiProperties.Dashboard;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider.TemplateGroup;
 import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
@@ -65,6 +68,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.Iterator;
 
 public abstract class BaseController {
 
@@ -105,6 +110,9 @@ public abstract class BaseController {
     @Inject
     private IContainerBackend backend;
 
+    @Inject
+	PbiProperties  pbiProperties;
+
     @PostConstruct
     public void baseInit() {
         defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url"));
@@ -125,9 +133,89 @@ public abstract class BaseController {
         return findUserProxy(appRequestInfo.getAppName(), appRequestInfo.getAppInstance());
     }
 
+    private boolean containsUserGroups(List<String> userGroups, List <String> key) {
+		for (String group : userGroups) {
+			for (String k : key) {
+			if (group.toLowerCase().equals(k.toLowerCase())) {
+				return true;
+				}
+			}
+		}
+		return false;
+	}
+
     protected Proxy findUserProxy(String appname, String appInstance) {
         return userAndAppNameAndInstanceNameProxyIndex.getProxy(userService.getCurrentUserId(), appname, appInstance);
     }
+
+	protected void prepareCustomMap(ModelMap map, HttpServletRequest request) {
+
+        // pbi specs
+		List<String> userGroups = userService.getGroups();
+	
+		Map<String, Dashboard> dashboards = new HashMap<>(pbiProperties.getDashboards());
+
+		Iterator<Map.Entry<String, Dashboard>> iterator = dashboards.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<String, Dashboard> entry = iterator.next();
+			Dashboard dashboard = entry.getValue();
+			List <String> key = dashboard.getAccessGroups();
+			boolean isUserGroupPresent = containsUserGroups(userGroups, key);
+			dashboard.setHasAccess(isUserGroupPresent);
+			
+			if (dashboard != null && dashboard.getIsCdck() != null && dashboard.getIsCdck()) {
+				iterator.remove();
+				continue;	
+			}
+		}
+
+		map.put("pbiDashboards", dashboards);
+		map.put("pbiLogo", resolveImageURI(environment.getProperty("pbi.defaults.logo-url")));
+
+
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
+		Map<ProxySpec, String> appLogos = new HashMap<>();
+		map.put("appLogos", appLogos);
+		
+		boolean displayAppLogos = false;
+		for (ProxySpec app: apps) {
+			if (app.getLogoURL() != null) {
+				displayAppLogos = true;
+				appLogos.put(app, resolveImageURI(app.getLogoURL()));
+			}
+		}
+		map.put("displayAppLogos", displayAppLogos);
+
+		// template groups
+		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+		List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+		for (ProxySpec app: apps) {
+            String groupId = shinyProxySpecProvider.getTemplateGroups().stream()
+                .filter(group -> group.getId().equals(app.getId()))
+                .map(TemplateGroup::getId)
+                .findFirst()
+                .orElse(null);
+			if (groupId != null) {
+				groupedApps.putIfAbsent(groupId, new ArrayList<>());
+				groupedApps.get(groupId).add(app);
+			} else {
+				ungroupedApps.add(app);
+			}
+		}
+
+		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());;
+		map.put("templateGroups", templateGroups);
+		map.put("groupedApps", groupedApps);
+		map.put("ungroupedApps", ungroupedApps);
+
+
+		// operator specific
+		map.put("operatorShowTransferMessage", environment.getProperty("proxy.operator.show-transfer-message-main-page", Boolean.class, true));
+
+	}
 
     protected void prepareMap(ModelMap map, HttpServletRequest request) {
         map.put("application_name", applicationName); // name of ShinyProxy, ContainerProxy etc
@@ -155,12 +243,25 @@ public abstract class BaseController {
         map.put("page", ""); // defaults, used in navbar
         map.put("maxInstances", 0); // defaults, used in navbar
         map.put("contextPath", contextPathHelper.withEndingSlash());
+
+        // user groups
+        List<String> userGroups = userService.getGroups();
+        map.put("userGroups", userGroups);
+
         map.put("resourcePrefix", "/" + identifierService.instanceId);
         map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
         map.put("pauseSupported", backend.supportsPause());
         map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
         map.put("notificationMessage", environment.getProperty("proxy.notification-message"));
+        String monitorUrl = environment.getProperty("proxy.monitoring-dashboard");
+		//String monitorUrl = "test";
+		if (Objects.equals(monitorUrl, null)) {
+			map.put("isMonitorUrl", false);
+		} else {
+			map.put("monitorUrl", monitorUrl);
+			map.put("isMonitorUrl", true);
+		}
 
         List<ProxySpec> apps = proxyService.getUserSpecs();
         map.put("apps", apps);
