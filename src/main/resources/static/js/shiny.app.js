@@ -1,9 +1,7 @@
-// noinspection ES6ConvertVarToLetConst
-
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,27 +18,54 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
+// noinspection ES6ConvertVarToLetConst
 
+/**
+ * @typedef {Object} Shiny.RuntimeValues
+ * @property {string} SHINYPROXY_PUBLIC_PATH
+ * @property {string} SHINYPROXY_WEBSOCKET_RECONNECTION_MODE
+ * @property {string} SHINYPROXY_FORCE_FULL_RELOAD
+ * @property {string} SHINYPROXY_TRACK_APP_URL
+ * @property {string} SHINYPROXY_APP_INSTANCE
+ */
+/**
+ * A number, or a string containing a number.
+ * @typedef {Object} Shiny.Proxy
+ * @property {string} id
+ * @property {string} targetId
+ * @property {string} specId
+ * @property {string} status
+ * @property {Shiny.RuntimeValues} runtimeValues
+ */
 
 Shiny = window.Shiny || {};
 Shiny.app = {
 
     staticState: {
-        proxyId: null,
         appName: null,
         appInstanceName: null,
-        containerPath: null,
-        webSocketReconnectionMode: null,
         maxReloadAttempts: 10,
         heartBeatRate: null,
+        openIdRefreshRate: 30000,
         maxInstances: null,
-        shinyForceFullReload: null,
+        parameters: {
+            allowedCombinations: null,
+            names: null,
+            ids: null
+        },
+        appPath: null, //  guaranteed to start with /
+        containerSubPath: null,
+        noAutomaticReloaded: null
     },
 
     runtimeState: {
+        /**
+         * @type {Shiny.Proxy}
+         */
+        proxy: null,
+        containerPath: null,
         navigatingAway: false,
         reloaded: false,
-        injectorIntervalId: null,
         tryingToReconnect: false,
         reloadAttempts: 0,
         reloadDismissed: false,
@@ -48,64 +73,196 @@ Shiny.app = {
         websocketConnections: [],
         lastHeartbeatTime: null,
         appStopped: false,
+        parentFrameUrl: null, // the current url of the shinyproxy page, i.e. the location of the browser (e.g. http://localhost:8080/app/01_hello/); guaranteed to end with /
+        baseFrameUrl: null, // the base url of the app iframe (i.e. without any subpath, query parameters, hash location etc.); guaranteed to end with /
     },
 
     /**
      * Start the Shiny Application.
-     * @param containerPath
-     * @param webSocketReconnectionMode
-     * @param proxyId
+     * @param proxy
      * @param heartBeatRate
      * @param appName
      * @param appInstanceName
-     * @param maxInstances
-     * @param shinyForceFullReload
+     * @param parameterAllowedCombinations
+     * @param parameterDefinitions
+     * @param parametersIds
+     * @param appPath
+     * @param containerSubPath
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload) {
+    start: async function (proxy, heartBeatRate, appName, appInstanceName, parameterAllowedCombinations, parameterDefinitions, parametersIds, appPath, containerSubPath) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
-        Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
-        Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
-        Shiny.instances._template = Handlebars.templates.switch_instances;
-
-        function internalStart() {
-            if (containerPath === "") {
-                Shiny.ui.setShinyFrameHeight();
-                Shiny.ui.showLoading();
-                $.post(window.location.pathname + window.location.search, function (response) {
-                    Shiny.app.staticState.containerPath = response.containerPath;
-                    Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
-                    Shiny.app.staticState.proxyId = response.proxyId;
-                    Shiny.ui.setupIframe();
-                    Shiny.ui.showFrame();
-                    Shiny.connections.startHeartBeats();
-                }).fail(function (request) {
-                    if (!Shiny.app.runtimeState.navigatingAway) {
-                        var newDoc = document.open("text/html", "replace");
-                        newDoc.write(request.responseText);
-                        newDoc.close();
-                    }
-                });
-            } else {
-                Shiny.app.staticState.containerPath = containerPath;
-                Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-                Shiny.app.staticState.proxyId = proxyId;
-                Shiny.ui.setupIframe();
-                Shiny.ui.showFrame();
-                Shiny.connections.startHeartBeats();
-            }
+        Shiny.app.staticState.appPath = appPath;
+        Shiny.app.staticState.containerSubPath = containerSubPath;
+        Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
+        Shiny.app.staticState.parameters.names = parameterDefinitions;
+        Shiny.app.staticState.parameters.ids = parametersIds;
+        Shiny.app.runtimeState.proxy = proxy;
+        Shiny.app.checkWasAutomaticReload();
+        Shiny.app.loadApp();
+    },
+    async loadApp() {
+        if (Shiny.app.runtimeState.proxy) {
+            console.log("Load app, id: " + Shiny.app.runtimeState.proxy.id + " status: " + Shiny.app.runtimeState.proxy.status);
         }
+        if (Shiny.app.runtimeState.proxy === null) {
+            console.log("Start app");
+            if (Shiny.app.staticState.parameters.names !== null) {
+                Shiny.ui.showParameterForm();
+            } else {
+                Shiny.app.startAppWithParameters(null);
+            }
+        } else if (Shiny.app.runtimeState.proxy.status === "New"
+            || Shiny.app.runtimeState.proxy.status === "Resuming") {
+            Shiny.ui.setShinyFrameHeight();
+            Shiny.ui.showLoading();
+            await Shiny.app.waitForAppStart();
+        } else if (Shiny.app.runtimeState.proxy.status === "Paused") {
+            if (Shiny.app.staticState.parameters.names !== null) {
+                Shiny.ui.showParameterForm();
+            } else {
+                Shiny.app.resumeApp(null);
+            }
+        } else if (Shiny.app.runtimeState.proxy.status === "Up") {
+            Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath + window.location.hash;
+            Shiny.ui.setupIframe();
+            Shiny.ui.showFrame();
+            Shiny.connections.startHeartBeats();
 
-        if (Shiny.operator !== undefined) {
-            Shiny.operator.start(function() {
-                internalStart();
-            });
+            const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+            let parentUrl = new URL(Shiny.app.staticState.appPath.substring(1), baseURL).toString();
+            if (!parentUrl.endsWith("/")) {
+                parentUrl = parentUrl + "/";
+            }
+            Shiny.app.runtimeState.parentFrameUrl = parentUrl;
+            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH, baseURL).toString();
+            if (!baseFrameUrl.endsWith("/")) {
+                baseFrameUrl = parentUrl + "/";
+            }
+            Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
+        } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
+            Shiny.ui.showStoppingPage();
+            // re-send stop request in case previous stop is stuck
+            await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping')
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
+            if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
+                Shiny.ui.showStoppedPage();
+            }
+        } else if (Shiny.app.runtimeState.proxy.status === "Pausing") {
+            Shiny.ui.showPausingPage();
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
+            if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
+                Shiny.ui.showPausedAppPage();
+            }
         } else {
-            internalStart();
+            Shiny.app.startupFailed();
         }
     },
-
+    async waitForAppStart() {
+        const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
+        Shiny.app.runtimeState.proxy = proxy;
+        if (proxy === null || proxy.status === "Stopped") {
+            Shiny.app.startupFailed();
+        } else {
+            Shiny.app.loadApp();
+        }
+    },
+    submitParameters(parameters) {
+        if (Shiny.app.runtimeState.proxy === null) {
+            Shiny.app.startAppWithParameters(parameters);
+        } else if (Shiny.app.runtimeState.proxy.status === "Paused") {
+            Shiny.app.resumeApp(parameters);
+        }
+    },
+    async resumeApp(parameters) {
+        Shiny.ui.setShinyFrameHeight();
+        Shiny.ui.showResumingPage();
+        await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Resuming', parameters)
+        await Shiny.app.waitForAppStart();
+    },
+    async startAppWithParameters(parameters) {
+        Shiny.ui.setShinyFrameHeight();
+        Shiny.ui.showLoading();
+        if (parameters === null) {
+            parameters = {}
+        }
+        const body = {parameters, timezone: Shiny.ui.getTimeZone()};
+        let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
+        let response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        try {
+            const json = await response.json();
+            if (response.status !== 200) {
+                if (json.status === "fail" && json.data !== null) {
+                    Shiny.app.startupFailed(json.data);
+                } else {
+                    Shiny.app.startupFailed();
+                }
+                return;
+            }
+            if (json.status !== "success") {
+                Shiny.app.startupFailed();
+                return;
+            }
+            Shiny.app.runtimeState.proxy = json.data;
+            await Shiny.app.waitForAppStart();
+        } catch {
+            Shiny.app.startupFailed();
+        }
+    },
+    startupFailed(errorMessage) {
+        if (!Shiny.app.runtimeState.appStopped && !Shiny.app.runtimeState.navigatingAway) {
+            Shiny.ui.showStartFailedPage(errorMessage);
+        }
+    },
+    async checkAppCrashedOrStopped(showError = true) {
+        // check that the app endpoint is still accessible
+        try {
+            const url = new URL(Shiny.app.runtimeState.containerPath, window.location.origin);
+            url.searchParams.append("sp_proxy_id", Shiny.app.runtimeState.proxy.id);
+            const response = await fetch(url);
+            if (response.status !== 503 && response.status !== 410) {
+                return false;
+            }
+            const json = await response.json();
+            if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
+                if (showError) {
+                    Shiny.ui.showStoppedPage();
+                }
+                return true;
+            }
+            if (json.status === "fail" && json.data === "app_crashed") {
+                if (showError) {
+                    Shiny.ui.showCrashedPage();
+                }
+                return true;
+            }
+        } catch (e) {
+            // ignore, server might not be reachable now, so app may still be running
+        }
+        return false;
+    },
+    checkWasAutomaticReload() {
+        // If the app crashes immediately after starting it, ShinyProxy will reload the page a single time.
+        // A flag in the URL indicates that the page was automatically reloaded and thus a second reload should not
+        // be attempted. After reload this flag is removed from the URL.
+        const url = new URL(window.location);
+        if (url.searchParams.has("sp_automatic_reload")) {
+            url.searchParams.delete("sp_automatic_reload");
+            window.history.replaceState(null, null, url);
+            Shiny.app.staticState.noAutomaticReloaded = true;
+        } else if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status === "Up") {
+            Shiny.app.staticState.noAutomaticReloaded = true;
+        } else{
+            Shiny.app.staticState.noAutomaticReloaded = false;
+        }
+    }
 }
 
 
@@ -113,15 +270,24 @@ window.onbeforeunload = function () {
     window.Shiny.app.runtimeState.navigatingAway = true;
 };
 
-window.addEventListener("resize", function () {
-    Shiny.ui.setShinyFrameHeight();
-});
 
 $(window).on('load', function () {
     Shiny.ui.setShinyFrameHeight();
 
     $('#switchInstancesModal-btn').click(function () {
-        Shiny.instances.eventHandlers.onShow();
+        Shiny.ui.showInstanceModal();
+        Shiny.instances.eventHandlers.onShow(null);
+    });
+
+    $('#appDetails-btn').click(function () {
+        Shiny.instances.eventHandlers.showAppDetails();
+    });
+
+    $('.app-link').on('click auxclick', function (e) {
+        e.preventDefault();
+        const appId = $(this).data("app-id");
+        Shiny.ui.showInstanceModal();
+        Shiny.instances.eventHandlers.onShow(appId);
     });
 
     $('#newInstanceForm').submit(function (e) {
@@ -129,13 +295,28 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.onNewInstance();
     });
 
-    $('#switchInstancesModal').on('shown.bs.modal', function () {
-        setTimeout(function () {
-            $("#instanceNameField").focus();
-        }, 10);
+    $('#reportIssueForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.ui.submitReportIssueForm();
     });
-    
-    $('#switchInstancesModal').on('hide.bs.modal', function () {
-        Shiny.instances.eventHandlers.onClose();
+
+    $('#changeUserIdForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.common.onChangeUserId();
+    });
+
+    $('#myAppsModal-btn').click(function () {
+        Shiny.ui.showMyAppsModal();
+        Shiny.common.onShowMyApps();
+    });
+
+
+    $('#parameterForm .default-parameter-form').on('submit', function (e) {
+        e.preventDefault();
+        Shiny.ui.submitParameterForm();
+    });
+
+    $('#parameterForm select').on('change', function (e) {
+        Shiny.ui.selectChange(e.target);
     });
 });

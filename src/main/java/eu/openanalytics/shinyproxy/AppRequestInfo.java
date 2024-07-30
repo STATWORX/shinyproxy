@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,9 +20,8 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.util.BadRequestException;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,19 +34,17 @@ public class AppRequestInfo {
     private final String appName;
     private final String appInstance;
     private final String subPath;
+    private final String appPath;
 
-    public AppRequestInfo(String appName, String appInstance, String subPath) {
+    public AppRequestInfo(String appName, String appInstance, String appPath, String subPath) {
         this.appName = appName;
         this.appInstance = appInstance;
+        this.appPath = appPath;
         this.subPath = subPath;
     }
 
-    public static AppRequestInfo fromRequestOrException(HttpServletRequest request) {
-        AppRequestInfo result = fromURI(request.getRequestURI());
-        if (result == null) {
-            throw new BadRequestException("Error parsing URL.");
-        }
-        return result;
+    public static AppRequestInfo fromRequestOrNull(HttpServletRequest request) {
+        return fromURI(request.getRequestURI());
     }
 
     public static AppRequestInfo fromURI(String uri) {
@@ -55,56 +52,55 @@ public class AppRequestInfo {
         Matcher appInstanceMatcher = APP_INSTANCE_PATTERN.matcher(uri);
         if (appInstanceMatcher.matches()) {
             String appName = appInstanceMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of app not found in URL.");
+            if (appName == null || appName.trim().isEmpty()) {
+                return null;
             }
 
             String appInstance = appInstanceMatcher.group(3);
-            if (appInstance == null || appInstance.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of instance not found in URL.");
+            if (appInstance == null || appInstance.trim().isEmpty()) {
+                return null;
             }
 
             if (appInstance.length() > 64 || !INSTANCE_NAME_PATTERN.matcher(appInstance).matches()) {
-                throw new BadRequestException("Error parsing URL: name of instance contains invalid characters or is too long.");
+                return null;
             }
 
             String subPath = appInstanceMatcher.group(4);
-            if (subPath == null || subPath.trim().equals("")) {
+            String appPath;
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
+                appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
+                appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath);
+            return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of app not found in URL.");
+            if (appName == null || appName.trim().isEmpty()) {
+                return null;
             }
 
             String appInstance = "_";
 
             String subPath = appMatcher.group(3);
-            if (subPath == null || subPath.trim().equals("")) {
+            String appPath;
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
+                appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
+                appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath);
+            return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else {
             return null;
         }
     }
 
     public String getAppInstance() {
-        return appInstance;
-    }
-
-    public String getAppInstanceDisplayName() {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
         return appInstance;
     }
 
@@ -115,4 +111,9 @@ public class AppRequestInfo {
     public String getSubPath() {
         return subPath;
     }
+
+    public String getAppPath() {
+        return appPath;
+    }
+
 }

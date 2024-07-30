@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -22,71 +22,91 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 public class IndexController extends BaseController {
 
-	@Inject
-	ShinyProxySpecProvider shinyProxySpecProvider;
+    /**
+     * Allows users on a ShinyProxy deployment <b>with only one app defined</b> to be redirected straight
+     * to the only existing app, without going through the Index page.
+     */
+    private static final String PROXY_LANDING_PAGE_SINGLE_APP_OPTION = "SingleApp";
 
-	@RequestMapping("/")
+    /**
+     * Allows users on any ShinyProxy deployment to be redirected straight to the first available app,
+     * without going through the Index page.
+     */
+    private static final String PROXY_LANDING_PAGE_FIRST_APP_OPTION = "FirstApp";
+
+    /**
+     * Redirects users on a ShinyProxy deployment to the index page.
+     */
+    private static final String PROXY_LANDING_PAGE_INDEX_OPTION = "/";
+
+    @Inject
+    private ShinyProxySpecProvider shinyProxySpecProvider;
+
+    @Inject
+    private Environment environment;
+
+    private MyAppsMode myAppsMode;
+
+    private String landingPage;
+
+    @PostConstruct
+    public void init() {
+        myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
+        landingPage = environment.getProperty("proxy.landing-page", "/");
+    }
+
+    @RequestMapping(path={"", "/"})
     private Object index(ModelMap map, HttpServletRequest request) {
-		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
-		
-		prepareMap(map, request);
-		
-		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
-		map.put("apps", apps);
+        if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
+            && !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
+            && !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+            return new RedirectView(landingPage, true);
+        }
 
-		Map<ProxySpec, String> appLogos = new HashMap<>();
-		map.put("appLogos", appLogos);
-		
-		boolean displayAppLogos = false;
-		for (ProxySpec app: apps) {
-			if (app.getLogoURL() != null) {
-				displayAppLogos = true;
-				appLogos.put(app, resolveImageURI(app.getLogoURL()));
-			}
-		}
-		map.put("displayAppLogos", displayAppLogos);
+        if (request.getServletPath().equals("")) {
+            // ensure URL has trailing slash
+            return new RedirectView("/", true);
+        }
 
-		// template groups
-		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
-		List<ProxySpec> ungroupedApps = new ArrayList<>();
+        List<ProxySpec> apps = proxyService.getUserSpecs();
 
-		for (ProxySpec app: apps) {
-			String groupId = shinyProxySpecProvider.getTemplateGroupOfApp(app.getId());
-			if (groupId != null) {
-				groupedApps.putIfAbsent(groupId, new ArrayList<>());
-				groupedApps.get(groupId).add(app);
-			} else {
-				ungroupedApps.add(app);
-			}
-		}
+        // If set to `FirstApp`, redirect to the first app available to the logged-in user
+        if (!apps.isEmpty() && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+            return new RedirectView("/app/" + apps.get(0).getId(), true);
+        }
+        // If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
+        if (apps.size() == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
+            return new RedirectView("/app/" + apps.get(0).getId(), true);
+        }
 
-		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());;
-		map.put("templateGroups", templateGroups);
-		map.put("groupedApps", groupedApps);
-		map.put("ungroupedApps", ungroupedApps);
+        prepareMap(map, request);
 
+        // navbar
+        map.put("page", "index");
 
-		// operator specific
-		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
+        map.put("myAppsMode", myAppsMode.toString());
 
-		return "index";
+        return "index";
+    }
+
+    public enum MyAppsMode {
+        Inline,
+        Modal,
+        None
     }
 
 }

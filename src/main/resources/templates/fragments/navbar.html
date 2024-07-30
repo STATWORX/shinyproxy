@@ -1,0 +1,83 @@
+<!--
+
+    ShinyProxy
+
+    Copyright (C) 2016-2024 Open Analytics
+
+    ===========================================================================
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the Apache License as published by
+    The Apache Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    Apache License for more details.
+
+    You should have received a copy of the Apache License
+    along with this program.  If not, see <http://www.apache.org/licenses/>
+
+-->
+<!DOCTYPE html>
+<html
+        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+        xmlns:th="http://www.thymeleaf.org">
+    <head></head>
+    <body>
+        <div id="navbar" th:fragment="navbar" th:if="${showNavbar}">
+            <nav class="navbar navbar-inverse navbar-fixed-top navbar-height">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <img class="navbar-brand" th:src="${logo}"/>
+                        <a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
+                    </div>
+                    <div class="navbar-form navbar-right">
+                        <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
+
+                        <a class="btn btn-primary btn-sm btn-restart-app"
+                           onclick="Shiny.instances.eventHandlers.showAppDetails();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
+
+                        <a class="btn btn-primary btn-sm btn-restart-app"
+                           onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
+
+                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Stop app</a>
+
+                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
+                           role="button"
+                           th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}">Pause app</a>
+
+                        <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
+                           th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
+
+                        <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
+                        <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
+                        <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
+                            Out</a>
+                    </div>
+                    <div class="navbar-right" sec:authorize="isAuthenticated()">
+					<span class="navbar-text">
+						<span class="glyphicon glyphicon-user"></span>
+						<span sec:authentication="name"></span>
+					</span>
+                    </div>
+                </div>
+            </nav>
+            <script>
+                // fix padding of body as soon as navbar is rendered
+                let navbarHeight = $('.navbar-height').height();
+                if (navbarHeight !== undefined) {
+                    $('body').css('padding-top', navbarHeight + 'px');
+                }
+            </script>
+        </div>
+    </body>
+</html>
