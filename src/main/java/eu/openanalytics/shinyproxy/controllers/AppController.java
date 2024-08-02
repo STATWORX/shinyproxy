@@ -251,16 +251,13 @@ public class AppController extends BaseController {
     })
     @ResponseBody
     @JsonView(Views.UserApi.class)
-    @RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
-    public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) {
+    @RequestMapping(value = {"/app_i/{specId}", "/app/{specId}"}, method = RequestMethod.POST)
+    public ResponseEntity<ApiResponse<Proxy>> startApp(ModelMap map, HttpServletRequest request,@PathVariable String specId, @RequestBody(required = false) AppBody appBody) {
+        app(map, request, specId, "_", "/app/" + specId);
         ProxySpec spec = proxyService.getUserSpec(specId);
         log.info("specId {}", specId);
         if (!userService.canAccess(spec)) {
             return ApiResponse.failForbidden();
-        }
-        Proxy proxy = findUserProxy(specId, appInstanceName);
-        if (proxy != null) {
-            return ApiResponse.fail("You already have an instance of this app with the given name");
         }
 
         if (!validateMaxInstances(spec)) {
@@ -271,7 +268,7 @@ public class AppController extends BaseController {
         List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
         String id = UUID.randomUUID().toString();
         runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
-        runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
+        runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, specId));
         if (appBody != null && appBody.getTimezone() != null) {
             runtimeValues.add(new RuntimeValue(UserTimeZoneKey.inst, appBody.getTimezone()));
         }
