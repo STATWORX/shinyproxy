@@ -39,6 +39,7 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
+import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
@@ -82,6 +83,7 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -253,12 +255,24 @@ public class AppController extends BaseController {
     @JsonView(Views.UserApi.class)
     @RequestMapping(value = {"/app_i/{specId}", "/app/{specId}"}, method = RequestMethod.POST)
     public ResponseEntity<ApiResponse<Proxy>> startApp(ModelMap map, HttpServletRequest request,@PathVariable String specId, @RequestBody(required = false) AppBody appBody) {
+        List<Proxy> userProxies = proxyService.getUserProxies(userService.getCurrentUserId());
+        log.info("Number of proxies for user: {}",userProxies.size());
+        for (Proxy proxy: userProxies){
+            log.info("proxy Id {}",proxy.getId());
+            String existingAppUrl = proxy.getRuntimeValue(PublicPathKey.inst);
+            log.info("found existing proxy: {}", existingAppUrl);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                                .location(URI.create(existingAppUrl))
+                                .build();
+        }
+
         app(map, request, specId, "_", "/app/" + specId);
         ProxySpec spec = proxyService.getUserSpec(specId);
         log.info("specId {}", specId);
         if (!userService.canAccess(spec)) {
             return ApiResponse.failForbidden();
         }
+
 
         if (!validateMaxInstances(spec)) {
             Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
@@ -275,6 +289,35 @@ public class AppController extends BaseController {
 
         try {
             return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
+        } catch (ProxyStartValidationException | InvalidParametersException ex) {
+            return ApiResponse.fail(ex.getMessage());
+        } catch (Throwable t) {
+            return ApiResponse.error("Failed to start proxy");
+        }
+    }
+
+
+    @RequestMapping(value = "/app/start/{specId}", method = RequestMethod.GET)
+    public ResponseEntity<ApiResponse<Proxy>> startNewAppInstance(ModelMap map, HttpServletRequest request, @PathVariable String specId) {
+        app(map, request, specId, "_", "/app/" + specId);
+        ProxySpec spec = proxyService.getUserSpec(specId);
+        log.info("specId {}", specId);
+        if (!userService.canAccess(spec)) {
+            return ApiResponse.failForbidden();
+        }
+
+        if (!validateMaxInstances(spec)) {
+            Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+            return ApiResponse.fail(String.format("Cannot start this app because you are using the maximum number of instances (%s) of this app.", maxInstances));
+        }
+
+        List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
+        String id = UUID.randomUUID().toString();
+        runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
+        runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, specId));
+
+        try {
+            return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, null));
         } catch (ProxyStartValidationException | InvalidParametersException ex) {
             return ApiResponse.fail(ex.getMessage());
         } catch (Throwable t) {
