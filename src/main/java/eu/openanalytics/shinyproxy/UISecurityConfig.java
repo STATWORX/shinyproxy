@@ -110,12 +110,15 @@ public class UISecurityConfig implements ICustomSecurityConfig {
         );
             
         // Limit access to pbi dashboards
-        MvcRequestMatcher pbiMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/pbi/{dashId}/**");
-        MvcRequestMatcher tokenMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/generate-token/pbi/{dashId}/**");
+        MvcRequestMatcher pbiMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/pbi/{dashId}");
+        MvcRequestMatcher tokenMatcher = new MvcRequestMatcher(handlerMappingIntrospector, "/generate-token/pbi/{dashId}");
         http.authorizeHttpRequests(authz -> authz
             .requestMatchers(pbiMatcher, tokenMatcher)
             .access((authentication, context) -> {
                 String dashId = pbiMatcher.matcher(context.getRequest()).getVariables().get("dashId");
+                if (dashId == null){
+                    dashId = tokenMatcher.matcher(context.getRequest()).getVariables().get("dashId");
+                }
                 return new AuthorizationDecision(pbiAccessControlService.canAccessDashboard(authentication.get(), dashId));
             })
         );

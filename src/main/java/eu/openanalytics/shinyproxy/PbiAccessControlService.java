@@ -21,7 +21,10 @@
 package eu.openanalytics.shinyproxy;
 
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
@@ -53,10 +56,17 @@ public class PbiAccessControlService {
     public boolean canAccessDashboard(Authentication authentication, String dashId) {
         // Check if the authenticated user has access to the dashboard with the given dashId
         // Return true if the user has access, false otherwise
-        log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
-        log.debug(MessageFormat.format("User´s group: {0}",String.join(",", userService.getGroups())));
         
-        Dashboard dashboard = pbiProperties.getDashboard(dashId);
+        Dashboard dashboard = null;
+
+        Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
+
+        for (Dashboard dash: dashboards.values()){
+            if (dash.getAppId().equals(dashId)){
+                dashboard = dash;
+                log.info("found dashboard: {}", dash.getReportId());
+            }
+        }
         
         if (dashboard == null) {
             log.warn("Requested Dashboard not found");

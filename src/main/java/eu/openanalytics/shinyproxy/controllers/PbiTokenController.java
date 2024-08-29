@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -141,11 +142,18 @@ public class PbiTokenController extends BaseController {
 		
 		// String reportId = request.getParameter("reportId");
 		// String groupId = request.getParameter("groupId");
-		log.debug(MessageFormat.format("Dashboard ID: {0}",dashId));
+		log.info(MessageFormat.format("get token for Dashboard ID: {0}",dashId));
 		
 		// log.info(MessageFormat.format("Request host: {0}:{1}",request.getServerName(),String.valueOf(request.getServerPort())));
 
-		Dashboard dashboard = pbiProperties.getDashboard(dashId);
+		Dashboard dashboard = null;
+		Map<String, Dashboard> dashboards = pbiProperties.getDashboards();
+
+        for (Dashboard dash: dashboards.values()){
+            if (dash.getAppId().equals(dashId)){
+                dashboard = dash;
+            }
+        }
 		String reportId = dashboard.getReportId();
 		String groupId = dashboard.getGroupId();
 		
