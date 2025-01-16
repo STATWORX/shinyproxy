@@ -1,4 +1,4 @@
-FROM openjdk:23-slim-bookworm
+FROM openjdk:25-slim-bookworm
 
 WORKDIR /opt/shinyproxy
 

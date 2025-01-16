@@ -1,5 +1,5 @@
-TAG ?= 3.1.1
-IMAGE = shinyproxy:$(TAG)
+TAG ?= pbi_v0.14.2
+IMAGE = mseucdckdacr.azurecr.io/shinyproxy:$(TAG)
 CONTAINER = shiny-proxy
 NETWORK = cdck-net
 
