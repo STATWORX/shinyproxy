@@ -92,25 +92,25 @@ public class ApiTestHelper {
 
     public Request.Builder createPostRequest(String path) {
         return new Request.Builder()
-            .post(RequestBody.create("", null))
+            .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .url(baseUrl + path);
     }
 
     public Request.Builder createPostRequest(String path, String body) {
         return new Request.Builder()
-            .post(RequestBody.create(body.getBytes(), MediaType.parse("application/json")))
+            .post(RequestBody.create(MediaType.parse("application/json"), body))
             .url(baseUrl + path);
     }
 
     public Request.Builder createPutRequest(String path) {
         return new Request.Builder()
-            .put(RequestBody.create("", null))
+            .put(RequestBody.create(MediaType.parse("application/json"), ""))
             .url(baseUrl + path);
     }
 
     public Request.Builder createPutRequest(String path, String body) {
         return new Request.Builder()
-            .put(RequestBody.create(body.getBytes(), MediaType.parse("application/json")))
+            .put(RequestBody.create(MediaType.parse("application/json"), body))
             .url(baseUrl + path);
     }
 
